@@ -43,30 +43,50 @@
 
     <main class="main">
       <header class="topbar">
-        <div class="nav-group">
-          <button class="icon-btn" id="prevBtn" title="Previous">‹</button>
-          <button class="icon-btn" id="nextBtn" title="Next">›</button>
-          <button class="pill-btn" id="todayBtn">Today</button>
-          <input id="jumpDate" type="date" class="date-input" />
-        </div>
-
-        <div class="title-group">
-          <h1 id="pageTitle">Calendar</h1>
-          <div id="pageSubtitle" class="page-subtitle"></div>
-        </div>
-
-        <div class="toolbar-right">
-          <div class="search-wrap">
-            <input id="searchInput" type="search" placeholder="Search events" />
-          </div>
-          <div class="view-switch">
-            <button class="switch-btn active" data-view="month">Month</button>
-            <button class="switch-btn" data-view="week">Week</button>
-            <button class="switch-btn" data-view="day">Day</button>
-            <button class="switch-btn" data-view="agenda">Agenda</button>
-          </div>
+        <div class="topbar-left">
           <button class="primary-btn" id="newEventBtn">+ New event</button>
         </div>
+
+        <div class="topbar-center">
+          <div class="nav-group">
+            <button class="icon-btn" id="prevBtn" title="Previous">‹</button>
+            <div class="date-display">
+              <h1 id="pageTitle">Calendar</h1>
+              <div id="pageSubtitle" class="page-subtitle"></div>
+            </div>
+            <button class="icon-btn" id="nextBtn" title="Next">›</button>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="view-tabs">
+            <button class="tab-btn active" data-view="month">Month</button>
+            <button class="tab-btn" data-view="week">Week</button>
+          </div>
+          
+          <div class="divider"></div>
+
+          <div class="toolbar-actions">
+            <button class="pill-btn" id="todayBtn">Today</button>
+            <div class="filter-wrap">
+              <button class="pill-btn" id="filterBtn">
+                <span>Filter</span>
+                <span class="chevron">▾</span>
+              </button>
+              <div id="filterDropdown" class="dropdown hidden">
+                <div class="dropdown-header">
+                  <span>Show Calendars</span>
+                  <button class="ghost-btn" id="addCalendarBtnTop" style="font-size:11px;padding:2px 6px;">+ Add</button>
+                </div>
+                <div id="filterCalendarList" class="filter-calendar-list"></div>
+              </div>
+            </div>
+            <div class="search-wrap">
+              <input id="searchInput" type="search" placeholder="Search events..." />
+            </div>
+          </div>
+        </div>
+        <input id="jumpDate" type="date" class="date-input hidden" />
       </header>
 
       <section class="content">

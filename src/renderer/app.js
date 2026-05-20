@@ -32,7 +32,10 @@ function cacheDom() {
   el.pageSubtitle = document.getElementById('pageSubtitle');
   el.searchInput = document.getElementById('searchInput');
   el.jumpDate = document.getElementById('jumpDate');
-  el.viewButtons = [...document.querySelectorAll('.switch-btn')];
+  el.viewButtons = [...document.querySelectorAll('.tab-btn')];
+  el.filterBtn = document.getElementById('filterBtn');
+  el.filterDropdown = document.getElementById('filterDropdown');
+  el.filterCalendarList = document.getElementById('filterCalendarList');
   el.modalOverlay = document.getElementById('modalOverlay');
   el.eventForm = document.getElementById('eventForm');
   el.modalTitle = document.getElementById('modalTitle');
@@ -61,6 +64,7 @@ function cacheDom() {
   el.prevBtn = document.getElementById('prevBtn');
   el.nextBtn = document.getElementById('nextBtn');
   el.addCalendarBtn = document.getElementById('addCalendarBtn');
+  el.addCalendarBtnTop = document.getElementById('addCalendarBtnTop');
 }
 
 function setAccentColor(color) {
@@ -223,8 +227,11 @@ function renderMiniCalendar() {
 function renderCalendarList() {
   if (!state.calendars.length) {
     el.calendarList.innerHTML = '<div class="muted">No calendars found.</div>';
+    el.filterCalendarList.innerHTML = '<div class="muted">No calendars found.</div>';
     return;
   }
+  
+  // Render sidebar list
   el.calendarList.innerHTML = state.calendars.map((cal) => {
     const checked = state.visibleCalendarIds.has(cal.id);
     return `
@@ -241,16 +248,36 @@ function renderCalendarList() {
     `;
   }).join('');
 
-  el.calendarList.querySelectorAll('[data-cal-toggle]').forEach((chk) => {
-    chk.addEventListener('change', async (e) => {
-      const id = Number(e.target.dataset.calToggle);
-      const visible = e.target.checked;
-      await CalendarAPI.toggleCalendar({ id, visible });
-      if (visible) state.visibleCalendarIds.add(id);
-      else state.visibleCalendarIds.delete(id);
-      reloadEvents();
+  // Render filter dropdown list
+  el.filterCalendarList.innerHTML = state.calendars.map((cal) => {
+    const checked = state.visibleCalendarIds.has(cal.id);
+    return `
+      <div class="filter-calendar-item" data-cal-id="${cal.id}">
+        <input type="checkbox" data-cal-toggle="${cal.id}" ${checked ? 'checked' : ''} />
+        <span class="color-dot" style="background:${cal.color}"></span>
+        <span>${cal.name}</span>
+      </div>
+    `;
+  }).join('');
+
+  const attachToggles = (selector) => {
+    document.querySelectorAll(selector).forEach((chk) => {
+      chk.addEventListener('change', async (e) => {
+        const id = Number(e.target.dataset.calToggle);
+        const visible = e.target.checked;
+        await CalendarAPI.toggleCalendar({ id, visible });
+        if (visible) state.visibleCalendarIds.add(id);
+        else state.visibleCalendarIds.delete(id);
+        
+        // Sync both lists
+        document.querySelectorAll(`[data-cal-toggle="${id}"]`).forEach(input => input.checked = visible);
+        
+        reloadEvents();
+      });
     });
-  });
+  };
+
+  attachToggles('[data-cal-toggle]');
 
   el.calendarList.querySelectorAll('[data-edit-cal]').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -808,6 +835,18 @@ function attachGlobalEvents() {
   el.eventForm.addEventListener('submit', submitEvent);
   el.deleteEventBtn.addEventListener('click', deleteEvent);
   el.addCalendarBtn.addEventListener('click', createCalendarQuickly);
+  if (el.addCalendarBtnTop) el.addCalendarBtnTop.addEventListener('click', createCalendarQuickly);
+
+  el.filterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    el.filterDropdown.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (el.filterDropdown && !el.filterDropdown.contains(e.target) && e.target !== el.filterBtn) {
+      el.filterDropdown.classList.add('hidden');
+    }
+  });
 
   el.viewButtons.forEach((btn) => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
