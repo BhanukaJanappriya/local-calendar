@@ -20,6 +20,13 @@ const state = {
   rangeStart: null,
   rangeEnd: null,
   calendarLoadTimer: null,
+  timePicker: {
+    targetInput: null,
+    mode: 'hours', // 'hours' or 'minutes'
+    selectedHour: 12,
+    selectedMinute: 0,
+    ampm: 'AM'
+  }
 };
 
 const el = {};
@@ -66,6 +73,134 @@ function cacheDom() {
   el.nextBtn = document.getElementById('nextBtn');
   el.addCalendarBtn = document.getElementById('addCalendarBtn');
   el.addCalendarBtnTop = document.getElementById('addCalendarBtnTop');
+  el.weeklyDaysSelector = document.getElementById('weeklyDaysSelector');
+  el.dayCircles = [...document.querySelectorAll('.day-circle')];
+
+  // Time Picker Elements
+  el.tpOverlay = document.getElementById('timePickerOverlay');
+  el.tpSelectedHour = document.getElementById('tpSelectedHour');
+  el.tpSelectedMinute = document.getElementById('tpSelectedMinute');
+  el.tpAM = document.getElementById('tpAM');
+  el.tpPM = document.getElementById('tpPM');
+  el.clockFace = document.getElementById('clockFace');
+  el.clockHand = document.getElementById('clockHand');
+  el.clockNumbers = document.getElementById('clockNumbers');
+  el.tpCancel = document.getElementById('tpCancel');
+  el.tpOK = document.getElementById('tpOK');
+}
+
+function initTimePicker() {
+  const openPicker = (e) => {
+    e.preventDefault();
+    state.timePicker.targetInput = e.target;
+    const [h24, m] = (e.target.value || '12:00').split(':').map(Number);
+    state.timePicker.selectedHour = h24 % 12 || 12;
+    state.timePicker.ampm = h24 >= 12 ? 'PM' : 'AM';
+    state.timePicker.selectedMinute = m;
+    state.timePicker.mode = 'hours';
+    updateTPUI();
+    el.tpOverlay.classList.remove('hidden');
+  };
+
+  el.startTimeInput.addEventListener('mousedown', openPicker);
+  el.endTimeInput.addEventListener('mousedown', openPicker);
+
+  el.tpSelectedHour.addEventListener('click', () => { state.timePicker.mode = 'hours'; updateTPUI(); });
+  el.tpSelectedMinute.addEventListener('click', () => { state.timePicker.mode = 'minutes'; updateTPUI(); });
+  el.tpAM.addEventListener('click', () => { state.timePicker.ampm = 'AM'; updateTPUI(); });
+  el.tpPM.addEventListener('click', () => { state.timePicker.ampm = 'PM'; updateTPUI(); });
+
+  el.clockFace.addEventListener('mousedown', handleClockInteraction);
+  el.tpCancel.addEventListener('click', () => el.tpOverlay.classList.add('hidden'));
+  el.tpOK.addEventListener('click', () => {
+    let h = state.timePicker.selectedHour % 12;
+    if (state.timePicker.ampm === 'PM') h += 12;
+    const timeStr = `${pad2(h)}:${pad2(state.timePicker.selectedMinute)}`;
+    state.timePicker.targetInput.value = timeStr;
+    el.tpOverlay.classList.add('hidden');
+  });
+}
+
+function handleClockInteraction(e) {
+  const rect = el.clockFace.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  const update = (moveEvent) => {
+    const x = moveEvent.clientX - centerX;
+    const y = moveEvent.clientY - centerY;
+    let angle = Math.atan2(y, x) * (180 / Math.PI) + 90;
+    if (angle < 0) angle += 360;
+
+    if (state.timePicker.mode === 'hours') {
+      let hour = Math.round(angle / 30) || 12;
+      if (hour > 12) hour = hour % 12;
+      state.timePicker.selectedHour = hour;
+    } else {
+      let minute = Math.round(angle / 6) * 1;
+      if (minute >= 60) minute = 0;
+      state.timePicker.selectedMinute = minute;
+    }
+    updateTPUI();
+  };
+
+  update(e);
+
+  const onMouseUp = () => {
+    document.removeEventListener('mousemove', update);
+    document.removeEventListener('mouseup', onMouseUp);
+    if (state.timePicker.mode === 'hours') {
+      state.timePicker.mode = 'minutes';
+      updateTPUI();
+    }
+  };
+  document.addEventListener('mousemove', update);
+  document.addEventListener('mouseup', onMouseUp);
+}
+
+function updateTPUI() {
+  const { mode, selectedHour, selectedMinute, ampm } = state.timePicker;
+  el.tpSelectedHour.textContent = pad2(selectedHour);
+  el.tpSelectedMinute.textContent = pad2(selectedMinute);
+  el.tpSelectedHour.classList.toggle('active', mode === 'hours');
+  el.tpSelectedMinute.classList.toggle('active', mode === 'minutes');
+  el.tpAM.classList.toggle('active', ampm === 'AM');
+  el.tpPM.classList.toggle('active', ampm === 'PM');
+
+  const angle = mode === 'hours' ? (selectedHour % 12) * 30 : selectedMinute * 6;
+  el.clockHand.style.transform = `rotate(${angle}deg)`;
+
+  // Render numbers
+  el.clockNumbers.innerHTML = '';
+  const radius = 80;
+
+  for (let i = 1; i <= 12; i++) {
+    // For hours: 1, 2, 3... 12
+    // For minutes: 5, 10, 15... 00 (where 12 is 00)
+    const hourVal = i;
+    const minuteVal = (i * 5) % 60;
+    const displayVal = mode === 'hours' ? hourVal : pad2(minuteVal);
+    
+    const numAngle = (i * 30) - 90;
+    const x = Math.cos(numAngle * Math.PI / 180) * radius + 100;
+    const y = Math.sin(numAngle * Math.PI / 180) * radius + 100;
+    
+    const div = document.createElement('div');
+    div.className = 'clock-number';
+    
+    const isActive = mode === 'hours' 
+      ? (hourVal === selectedHour)
+      : (minuteVal === selectedMinute);
+
+    if (isActive) {
+      div.classList.add('active');
+    }
+    
+    div.style.left = `${x - 16}px`;
+    div.style.top = `${y - 16}px`;
+    div.textContent = displayVal;
+    el.clockNumbers.appendChild(div);
+  }
 }
 
 function setAccentColor(color) {
@@ -650,12 +785,42 @@ function openModal() {
   el.modalOverlay.classList.remove('hidden');
 }
 
+function initWeeklyDaySelector() {
+  el.dayCircles.forEach(circle => {
+    circle.addEventListener('click', () => {
+      circle.classList.toggle('active');
+    });
+  });
+}
+
+function getSelectedWeeklyDays() {
+  return el.dayCircles
+    .filter(c => c.classList.contains('active'))
+    .map(c => Number(c.dataset.day));
+}
+
+function setSelectedWeeklyDays(days = []) {
+  el.dayCircles.forEach(c => {
+    c.classList.toggle('active', days.includes(Number(c.dataset.day)));
+  });
+}
+
+function toggleRecurrenceUI() {
+  const isWeekly = el.recurrenceType.value === 'weekly';
+  el.weeklyDaysSelector.classList.toggle('hidden', !isWeekly);
+}
+
+function toggleTimeInputs() {
+  el.timeRow.style.display = el.allDayInput.checked ? 'none' : 'flex';
+}
+
 function closeModal() {
   el.modalOverlay.classList.add('hidden');
   el.eventForm.reset();
   el.eventId.value = '';
-  el.modalTitle.textContent = 'New event';
   el.deleteEventBtn.classList.add('hidden');
+  setSelectedWeeklyDays([]);
+  toggleRecurrenceUI();
 }
 
 function openNewEvent(dateStr = null) {
@@ -663,7 +828,6 @@ function openNewEvent(dateStr = null) {
   fillCalendarSelect();
   el.eventForm.reset();
   el.eventId.value = '';
-  el.modalTitle.textContent = 'New event';
   el.titleInput.value = '';
   el.calendarSelect.value = state.calendars[0]?.id || '';
   el.startDateInput.value = date;
@@ -672,7 +836,7 @@ function openNewEvent(dateStr = null) {
   el.endTimeInput.value = '10:00';
   el.allDayInput.checked = false;
   el.notifyInput.checked = true;
-  el.timeRow.style.display = 'grid';
+  el.timeRow.style.display = 'flex';
   el.locationInput.value = '';
   el.descriptionInput.value = '';
   el.reminderInput.value = '10';
@@ -680,6 +844,8 @@ function openNewEvent(dateStr = null) {
   el.recurrenceInterval.value = '1';
   el.recurrenceUntil.value = '';
   el.deleteEventBtn.classList.add('hidden');
+  setSelectedWeeklyDays([]);
+  toggleRecurrenceUI();
   openModal();
 }
 
@@ -688,7 +854,6 @@ async function openEventById(id) {
   if (!ev) return;
   fillCalendarSelect();
   el.eventId.value = ev.id;
-  el.modalTitle.textContent = 'Edit event';
   el.titleInput.value = ev.title;
   el.calendarSelect.value = ev.calendar_id;
   el.allDayInput.checked = Boolean(ev.all_day);
@@ -700,6 +865,9 @@ async function openEventById(id) {
   el.recurrenceInterval.value = ev.recurrence_interval || 1;
   el.recurrenceUntil.value = ev.recurrence_until ? toDateInputValue(ev.recurrence_until) : '';
 
+  setSelectedWeeklyDays([]); 
+  toggleRecurrenceUI();
+
   const s = new Date(ev.start_at);
   const e = new Date(ev.end_at);
   el.startDateInput.value = toDateInputValue(s);
@@ -707,13 +875,9 @@ async function openEventById(id) {
   el.startTimeInput.value = `${String(s.getHours()).padStart(2, '0')}:${String(s.getMinutes()).padStart(2, '0')}`;
   const endTimeSource = ev.all_day ? new Date(e.getTime() - 24 * 60 * 60 * 1000) : e;
   el.endTimeInput.value = `${String(endTimeSource.getHours()).padStart(2, '0')}:${String(endTimeSource.getMinutes()).padStart(2, '0')}`;
-  el.timeRow.style.display = ev.all_day ? 'none' : 'grid';
+  el.timeRow.style.display = ev.all_day ? 'none' : 'flex';
   el.deleteEventBtn.classList.remove('hidden');
   openModal();
-}
-
-function toggleTimeInputs() {
-  el.timeRow.style.display = el.allDayInput.checked ? 'none' : 'grid';
 }
 
 function collectEventPayload() {
@@ -748,10 +912,20 @@ function collectEventPayload() {
   const recurrenceInterval = Math.max(1, Number(el.recurrenceInterval.value || 1));
   const recurrenceUntil = el.recurrenceUntil.value ? `${el.recurrenceUntil.value}T23:59` : null;
 
+  let description = el.descriptionInput.value.trim();
+  if (recurrenceType === 'weekly') {
+    const days = getSelectedWeeklyDays();
+    if (days.length) {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const selectedNames = days.map(d => dayNames[d]).join(', ');
+      description = `[Repeats on: ${selectedNames}]\n${description}`;
+    }
+  }
+
   return {
     calendar_id: Number(el.calendarSelect.value),
     title: el.titleInput.value.trim(),
-    description: el.descriptionInput.value.trim(),
+    description: description,
     location: el.locationInput.value.trim(),
     start_at: startAt,
     end_at: endAt,
@@ -889,21 +1063,10 @@ function attachGlobalEvents() {
   });
 }
 
-function startClock() {
-  const update = () => {
-    if (el.liveClock) {
-      const now = new Date();
-      el.liveClock.textContent = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-  };
-  update();
-  setInterval(update, 1000);
-}
-
 async function init() {
   cacheDom();
   attachGlobalEvents();
-  startClock();
+  initTimePicker();
   await loadBootstrap();
   fillCalendarSelect();
   if (!el.searchInput.value) el.searchInput.placeholder = 'Search events';

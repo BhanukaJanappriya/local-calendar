@@ -56,7 +56,6 @@
             </div>
             <button class="icon-btn" id="nextBtn" title="Next">›</button>
           </div>
-          <div id="liveClock" class="live-clock"></div>
         </div>
 
         <div class="topbar-right">
@@ -97,105 +96,128 @@
   </div>
 
   <div id="modalOverlay" class="modal-overlay hidden">
-    <div class="modal-card">
+    <div class="modal-card gc-modal">
       <div class="modal-header">
-        <div>
-          <h2 id="modalTitle">New event</h2>
-          <p class="muted">Stored locally on this PC</p>
-        </div>
         <button class="icon-btn" id="closeModalBtn">×</button>
       </div>
 
-      <form id="eventForm" class="event-form">
+      <form id="eventForm" class="event-form gc-form">
         <input type="hidden" id="eventId" />
-        <div class="form-row two">
-          <label>
-            <span>Title</span>
-            <input id="titleInput" type="text" required maxlength="120" placeholder="Event title" />
-          </label>
-          <label>
-            <span>Calendar</span>
-            <select id="calendarSelect"></select>
-          </label>
+        
+        <div class="gc-row title-row">
+          <input id="titleInput" type="text" required maxlength="120" placeholder="Add title" class="gc-title-input" />
         </div>
 
-        <div class="form-row two">
-          <label>
-            <span>Start</span>
-            <input id="startDateInput" type="date" required />
-          </label>
-          <label>
-            <span>End</span>
-            <input id="endDateInput" type="date" required />
-          </label>
+        <div class="gc-row type-row">
+          <span class="gc-icon">🕒</span>
+          <div class="gc-datetime-row">
+            <div class="date-inputs">
+              <input id="startDateInput" type="date" required class="gc-input" />
+              <div id="timeRow" class="time-inputs">
+                <input id="startTimeInput" type="time" class="gc-input" />
+                <span>–</span>
+                <input id="endTimeInput" type="time" class="gc-input" />
+              </div>
+              <input id="endDateInput" type="date" required class="gc-input" />
+            </div>
+            <label class="gc-checkbox-label">
+              <input id="allDayInput" type="checkbox" />
+              <span>All-day</span>
+            </label>
+          </div>
         </div>
 
-        <div class="form-row two">
-          <label class="inline">
-            <input id="allDayInput" type="checkbox" />
-            <span>All-day event</span>
-          </label>
-          <label class="inline">
-            <input id="notifyInput" type="checkbox" checked />
-            <span>Reminder enabled</span>
-          </label>
+        <div class="gc-row recurrence-row">
+          <span class="gc-icon">🔄</span>
+          <div class="recurrence-controls">
+            <div class="recurrence-main">
+              <select id="recurrenceType" class="gc-input">
+                <option value="none">Does not repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+              <div id="recurrenceDetail" class="recurrence-detail">
+                <span>every</span>
+                <input id="recurrenceInterval" type="number" min="1" step="1" value="1" class="gc-input small" />
+                <span>unit(s) until</span>
+                <input id="recurrenceUntil" type="date" class="gc-input" />
+              </div>
+            </div>
+            <div id="weeklyDaysSelector" class="weekly-days hidden">
+              <button type="button" class="day-circle" data-day="0">S</button>
+              <button type="button" class="day-circle" data-day="1">M</button>
+              <button type="button" class="day-circle" data-day="2">T</button>
+              <button type="button" class="day-circle" data-day="3">W</button>
+              <button type="button" class="day-circle" data-day="4">T</button>
+              <button type="button" class="day-circle" data-day="5">F</button>
+              <button type="button" class="day-circle" data-day="6">S</button>
+            </div>
+          </div>
         </div>
 
-        <div class="form-row two" id="timeRow">
-          <label>
-            <span>Start time</span>
-            <input id="startTimeInput" type="time" />
-          </label>
-          <label>
-            <span>End time</span>
-            <input id="endTimeInput" type="time" />
-          </label>
+        <div class="gc-row location-row">
+          <span class="gc-icon">📍</span>
+          <input id="locationInput" type="text" maxlength="120" placeholder="Add location" class="gc-input full" />
         </div>
 
-        <div class="form-row two">
-          <label>
-            <span>Location</span>
-            <input id="locationInput" type="text" maxlength="120" placeholder="Optional location" />
-          </label>
-          <label>
-            <span>Reminder minutes before</span>
-            <input id="reminderInput" type="number" min="0" step="5" value="10" />
-          </label>
+        <div class="gc-row description-row">
+          <span class="gc-icon">📝</span>
+          <textarea id="descriptionInput" rows="1" placeholder="Add description" class="gc-input full"></textarea>
         </div>
 
-        <label>
-          <span>Description</span>
-          <textarea id="descriptionInput" rows="4" placeholder="Notes, agenda, links, or tasks"></textarea>
-        </label>
-
-        <div class="form-row three">
-          <label>
-            <span>Repeat</span>
-            <select id="recurrenceType">
-              <option value="none">Does not repeat</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </label>
-          <label>
-            <span>Every</span>
-            <input id="recurrenceInterval" type="number" min="1" step="1" value="1" />
-          </label>
-          <label>
-            <span>Until</span>
-            <input id="recurrenceUntil" type="date" />
-          </label>
+        <div class="gc-row calendar-row">
+          <span class="gc-icon">📅</span>
+          <select id="calendarSelect" class="gc-input full"></select>
         </div>
 
-        <div class="modal-actions">
+        <div class="gc-row reminder-row">
+          <span class="gc-icon">🔔</span>
+          <div class="reminder-controls">
+            <label class="gc-checkbox-label">
+              <input id="notifyInput" type="checkbox" checked />
+              <span>Reminder</span>
+            </label>
+            <input id="reminderInput" type="number" min="0" step="5" value="10" class="gc-input small" />
+            <span>minutes before</span>
+          </div>
+        </div>
+
+        <div class="modal-actions gc-actions">
           <button type="button" id="deleteEventBtn" class="danger-btn hidden">Delete</button>
           <div class="spacer"></div>
           <button type="button" id="cancelBtn" class="secondary-btn">Cancel</button>
-          <button type="submit" class="primary-btn">Save event</button>
+          <button type="submit" class="primary-btn">Save</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div id="timePickerOverlay" class="time-picker-overlay hidden">
+    <div class="time-picker-card">
+      <div class="time-picker-header">
+        <div id="tpSelectedTime">
+          <span id="tpSelectedHour" class="active">12</span>:<span id="tpSelectedMinute">00</span>
+          <div class="tp-ampm-toggle">
+            <span id="tpAM" class="active">AM</span>
+            <span id="tpPM">PM</span>
+          </div>
+        </div>
+      </div>
+      <div class="clock-face-container">
+        <div id="clockFace" class="clock-face">
+          <div class="clock-center"></div>
+          <div id="clockHand" class="clock-hand">
+            <div class="hand-circle"></div>
+          </div>
+          <div id="clockNumbers" class="clock-numbers"></div>
+        </div>
+      </div>
+      <div class="time-picker-actions">
+        <button type="button" id="tpCancel" class="secondary-btn">Cancel</button>
+        <button type="button" id="tpOK" class="primary-btn">OK</button>
+      </div>
     </div>
   </div>
 
