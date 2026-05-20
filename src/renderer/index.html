@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Calendar</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">LC</div>
+        <div>
+          <div class="brand-title">Local Calendar</div>
+          <div class="brand-subtitle">Private desktop planner</div>
+        </div>
+      </div>
+
+      <section class="sidebar-section">
+        <div class="section-header">
+          <span>Mini calendar</span>
+          <button class="ghost-btn" id="miniTodayBtn">Today</button>
+        </div>
+        <div id="miniCalendar" class="mini-calendar"></div>
+      </section>
+
+      <section class="sidebar-section">
+        <div class="section-header">
+          <span>Calendars</span>
+          <button class="icon-btn" id="addCalendarBtn" title="Add calendar">+</button>
+        </div>
+        <div id="calendarList" class="calendar-list"></div>
+      </section>
+
+      <section class="sidebar-section sidebar-footer">
+        <div class="legend-item"><span class="dot accent"></span><span>Offline only</span></div>
+        <div class="legend-item"><span class="dot soft"></span><span>SQLite saved</span></div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="nav-group">
+          <button class="icon-btn" id="prevBtn" title="Previous">‹</button>
+          <button class="icon-btn" id="nextBtn" title="Next">›</button>
+          <button class="pill-btn" id="todayBtn">Today</button>
+          <input id="jumpDate" type="date" class="date-input" />
+        </div>
+
+        <div class="title-group">
+          <h1 id="pageTitle">Calendar</h1>
+          <div id="pageSubtitle" class="page-subtitle"></div>
+        </div>
+
+        <div class="toolbar-right">
+          <div class="search-wrap">
+            <input id="searchInput" type="search" placeholder="Search events" />
+          </div>
+          <div class="view-switch">
+            <button class="switch-btn active" data-view="month">Month</button>
+            <button class="switch-btn" data-view="week">Week</button>
+            <button class="switch-btn" data-view="day">Day</button>
+            <button class="switch-btn" data-view="agenda">Agenda</button>
+          </div>
+          <button class="primary-btn" id="newEventBtn">+ New event</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div id="calendarRoot" class="calendar-root"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h2 id="modalTitle">New event</h2>
+          <p class="muted">Stored locally on this PC</p>
+        </div>
+        <button class="icon-btn" id="closeModalBtn">×</button>
+      </div>
+
+      <form id="eventForm" class="event-form">
+        <input type="hidden" id="eventId" />
+        <div class="form-row two">
+          <label>
+            <span>Title</span>
+            <input id="titleInput" type="text" required maxlength="120" placeholder="Event title" />
+          </label>
+          <label>
+            <span>Calendar</span>
+            <select id="calendarSelect"></select>
+          </label>
+        </div>
+
+        <div class="form-row two">
+          <label>
+            <span>Start</span>
+            <input id="startDateInput" type="date" required />
+          </label>
+          <label>
+            <span>End</span>
+            <input id="endDateInput" type="date" required />
+          </label>
+        </div>
+
+        <div class="form-row two">
+          <label class="inline">
+            <input id="allDayInput" type="checkbox" />
+            <span>All-day event</span>
+          </label>
+          <label class="inline">
+            <input id="notifyInput" type="checkbox" checked />
+            <span>Reminder enabled</span>
+          </label>
+        </div>
+
+        <div class="form-row two" id="timeRow">
+          <label>
+            <span>Start time</span>
+            <input id="startTimeInput" type="time" />
+          </label>
+          <label>
+            <span>End time</span>
+            <input id="endTimeInput" type="time" />
+          </label>
+        </div>
+
+        <div class="form-row two">
+          <label>
+            <span>Location</span>
+            <input id="locationInput" type="text" maxlength="120" placeholder="Optional location" />
+          </label>
+          <label>
+            <span>Reminder minutes before</span>
+            <input id="reminderInput" type="number" min="0" step="5" value="10" />
+          </label>
+        </div>
+
+        <label>
+          <span>Description</span>
+          <textarea id="descriptionInput" rows="4" placeholder="Notes, agenda, links, or tasks"></textarea>
+        </label>
+
+        <div class="form-row three">
+          <label>
+            <span>Repeat</span>
+            <select id="recurrenceType">
+              <option value="none">Does not repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+          <label>
+            <span>Every</span>
+            <input id="recurrenceInterval" type="number" min="1" step="1" value="1" />
+          </label>
+          <label>
+            <span>Until</span>
+            <input id="recurrenceUntil" type="date" />
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="deleteEventBtn" class="danger-btn hidden">Delete</button>
+          <div class="spacer"></div>
+          <button type="button" id="cancelBtn" class="secondary-btn">Cancel</button>
+          <button type="submit" class="primary-btn">Save event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+{
+  "name": "local-calendar-desktop",
+  "version": "1.0.0",
+  "description": "A polished local-only desktop calendar app built with Electron, SQLite, HTML, CSS, and JavaScript.",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "package": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "keywords": [
+    "electron",
+    "calendar",
+    "sqlite",
+    "desktop",
+    "local"
+  ],
+  "author": "OpenAI",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
+    "electron": "^31.7.7",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1"
+  },
+  "build": {
+    "appId": "com.local.calendar.desktop",
+    "productName": "Local Calendar",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [],
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "mac": {
+      "target": [
+        "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "zip"
+      ]
+    }
+  }
+}
