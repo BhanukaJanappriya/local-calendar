@@ -36,6 +36,7 @@ function cacheDom() {
   el.filterBtn = document.getElementById('filterBtn');
   el.filterDropdown = document.getElementById('filterDropdown');
   el.filterCalendarList = document.getElementById('filterCalendarList');
+  el.liveClock = document.getElementById('liveClock');
   el.modalOverlay = document.getElementById('modalOverlay');
   el.eventForm = document.getElementById('eventForm');
   el.modalTitle = document.getElementById('modalTitle');
@@ -421,18 +422,18 @@ function renderWeekView(dayCount) {
 }
 
 function renderDayColumn(day, events, dayCount) {
-  const dayMinutesHeight = 24 * 72;
+  const dayMinutesHeight = 24 * 60;
   const lanes = assignLanes(events.filter((ev) => !ev.all_day));
   const blocks = lanes.map(({ ev, lane, totalLanes }) => {
     const start = new Date(ev.occurrence_start);
     const end = new Date(ev.occurrence_end);
-    const top = (start.getHours() * 60 + start.getMinutes()) * 1.2;
-    const height = Math.max(32, ((end.getTime() - start.getTime()) / 60000) * 1.2);
+    const top = (start.getHours() * 60 + start.getMinutes());
+    const height = Math.max(32, ((end.getTime() - start.getTime()) / 60000));
     const widthPercent = 100 / totalLanes;
     const leftPercent = lane * widthPercent;
     return `
       <div class="timeline-event" draggable="true" data-event-id="${ev.id}" data-occurrence-start="${ev.occurrence_start}"
-        style="top:${top}px;height:${height}px;left:calc(${leftPercent}% + 6px);width:calc(${widthPercent}% - 12px);border-left-color:${ev.calendar_color}">
+        style="top:${top}px;height:${height}px;left:calc(${leftPercent}% + 4px);width:calc(${widthPercent}% - 8px);border-left-color:${ev.calendar_color}">
         <div class="time">${formatTime(start)} ${ev.all_day ? '' : '– ' + formatTime(end)}</div>
         <div class="title">${ev.title}</div>
         <div class="meta">${ev.calendar_name}${ev.location ? ' • ' + ev.location : ''}</div>
@@ -888,9 +889,21 @@ function attachGlobalEvents() {
   });
 }
 
+function startClock() {
+  const update = () => {
+    if (el.liveClock) {
+      const now = new Date();
+      el.liveClock.textContent = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+  };
+  update();
+  setInterval(update, 1000);
+}
+
 async function init() {
   cacheDom();
   attachGlobalEvents();
+  startClock();
   await loadBootstrap();
   fillCalendarSelect();
   if (!el.searchInput.value) el.searchInput.placeholder = 'Search events';
